@@ -1,296 +1,1564 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+<script>
+  import { onMount } from 'svelte';
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  /* ==========================================
+     1. パレット & ドット絵スプライトデータ
+     ========================================== */
+  const P = {
+    "0": "transparent",
+    "1": "#111f28", // 主線
+    "2": "#38bdf8", // メインボディ
+    "3": "#f43f5e", // ほっぺ・アクセント
+    "4": "#fbbf24"  // アイテム
+  };
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  // まるっち風ベビー（通常）
+  const babySprite = [
+    "0000000000000000",
+    "0000011111100000",
+    "0001122222211000",
+    "0012222222222100",
+    "0122222222222210",
+    "0122211221122210",
+    "0122211221122210",
+    "0122322112232210",
+    "0122222222222210",
+    "0012222222222100",
+    "0001122222211000",
+    "0000011111100000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000"
+  ];
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
-}
+  // まるっち風ベビー（潰れ顔）
+  const babySquish = [
+    "0000000000000000",
+    "0000000000000000",
+    "0000011111100000",
+    "0001122222211000",
+    "0012211221122100",
+    "0122211221122210",
+    "0122211221122210",
+    "0122322112232210",
+    "0122221111222210",
+    "0012222222222100",
+    "0001111111111000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000"
+  ];
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+  // まるっち風ベビー（すね顔・ジト目）
+  const babySulk = [
+    "0000000000000000",
+    "0000011111100000",
+    "0001122222211000",
+    "0012222222222100",
+    "0122222222222210",
+    "0122211121112210",
+    "0122200020002210",
+    "0122222211222210",
+    "0122222122122210",
+    "0012222222222100",
+    "0001122222211000",
+    "0000011111100000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000",
+    "0000000000000000"
+  ];
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
+  const kidsPuku = [
+    "000000000000000000000000",
+    "000000000111110000000000",
+    "000000001222221000000000",
+    "000000012222222100000000",
+    "000000122222222210000000",
+    "000001221122211221000000",
+    "000001221122211221000000",
+    "000012221122211222100000",
+    "000012222222222222100000",
+    "000012232211122322100000",
+    "000012222222222222100000",
+    "000001222222222210000000",
+    "000001122111122110000000",
+    "000000121222212100000000",
+    "000000120122102100000000",
+    "000000110011001100000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+  ];
 
-body {
-  margin: 0;
-}
+  const pukuSquish = [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000011111111100000000",
+    "000001122222222211000000",
+    "000012222222222222100000",
+    "000122211222221122210000",
+    "000122211222221122210000",
+    "000122222222222222210000",
+    "000122332211122332210000",
+    "000122222222222222210000",
+    "000012222222222222100000",
+    "000001111111111111000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+  ];
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
-}
+  const kidsSulk = [
+    "000000000000000000000000",
+    "000000000111110000000000",
+    "000000001222221000000000",
+    "000000012222222100000000",
+    "000000122222222210000000",
+    "000001222222222221000000",
+    "000001222222222221000000",
+    "000012222222222222100000",
+    "000012222222222222100000",
+    "000012232222222322100000",
+    "000012222222222222100000",
+    "000001222222222221000000",
+    "000001122111122110000000",
+    "000000121222212100000000",
+    "000000120122102100000000",
+    "000000110011001100000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+  ];
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
+  const kidsSui = [
+    "000000000000000000000000",
+    "000000000011110000000000",
+    "000000000122221000000000",
+    "000000001222222100000000",
+    "000000012222222210000000",
+    "000000122112211221000000",
+    "000000122112211221000000",
+    "011000122222222221000110",
+    "122111222322223222111221",
+    "012222222111122222222100",
+    "001222212222221222210000",
+    "000110012222221001100000",
+    "000000001122110000000000",
+    "000000000122100000000000",
+    "000000001222210000000000",
+    "000000012211221000000000",
+    "000000011000011000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+  ];
 
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
+  const suiSquish = [
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000111111111100000000",
+    "011001222222222210000110",
+    "122112221122112221111221",
+    "012222221122112222222100",
+    "001222232222223222210000",
+    "000112221111112221100000",
+    "000001111111111111000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+  ];
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
-}
+  const kidsFuwa = [
+    "000000000000000000000000",
+    "001100000111100000110000",
+    "012210001222210001221000",
+    "012211012222221011221000",
+    "001122222222222222110000",
+    "000012222222222222100000",
+    "000012211222211221000000",
+    "000012211222211221000000",
+    "000012232222223221000000",
+    "000012222211222221000000",
+    "000012222222222221000000",
+    "000001222222222210000000",
+    "000001122222222110000000",
+    "000012211222211221000000",
+    "000001100111100110000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+  ];
 
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+  const fuwaSquish = [
+    "000000000000000000000000",
+    "011000000000000000000110",
+    "12211001111111100011221",
+    "01222112222222211122210",
+    "00112221122221122211000",
+    "00012221122221122210000",
+    "00012232222222322210000",
+    "00012222111111222210000",
+    "00001111111111111100000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000",
+    "000000000000000000000000"
+  ];
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-}
-
-.hero {
-  position: relative;
-
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
-
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#app {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-#center {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
-}
-
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
+  /* ==========================================
+     2. Web Audio SE
+     ========================================== */
+  let audioCtx = null;
+  function initAudio() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
   }
 
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
+  function playSE(type) {
+    if (!audioCtx) return;
+    const now = audioCtx.currentTime;
+    
+    if (type === 'feed') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, now);
+      osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.12);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.12);
+    } else if (type === 'pet') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(350, now);
+      osc.frequency.linearRampToValueAtTime(500, now + 0.08);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.08);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.08);
+    } else if (type === 'squish') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.linearRampToValueAtTime(70, now + 0.2);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.25);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.25);
+    } else if (type === 'clean') {
+      for(let i=0; i<3; i++) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(500 + i*250, now + i*0.05);
+        gain.gain.setValueAtTime(0.15, now + i*0.05);
+        gain.gain.linearRampToValueAtTime(0, now + i*0.05 + 0.08);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now + i*0.05); osc.stop(now + i*0.05 + 0.08);
+      }
+    } else if (type === 'buy') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523, now);
+      osc.frequency.setValueAtTime(659, now + 0.08);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.2);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.2);
+    } else if (type === 'evolve') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.3);
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.4);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.4);
+    }
   }
 
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
+  /* ==========================================
+     3. 状態管理（Svelteリアクティブ）
+     ========================================== */
+  let aliveSeconds = $state(0); // 育成総カウント（秒）
+  let coins = $state(50);
+  let stage = $state(0);
+  let branchType = $state('puku');
+  let mood = $state(80);
+  let satiety = $state(80);
+  let cleanliness = $state(90);
+  let petCount = $state(0);
+  // 今の世代のお世話傾向。なでる・ごはん・遊びの回数を記録する
+  let petCareCount = $state(0);
+  let feedCareCount = $state(0);
+  let playCareCount = $state(0);
+  let discoveredTypes = $state([]);
+  let generation = $state(1);
+  let showDex = $state(false);
+  let showGenerationChoice = $state(false);
+
+  let inventory = $state(['ball']);
+  let activeToy = $state(null);
+  let toyX = $state(64), toyY = $state(64);
+
+  let isSulking = $state(false);
+  let isSquished = $state(false);
+  let squishTimer = 0;
+
+  // 進化カットイン演出フラグ
+  let isEvolving = $state(false);
+  let evolveText = $state("");
+
+  let posX = 64, posY = 64;
+  let vx = 0, vy = 0;
+  let targetX = 64, targetY = 64;
+  let isNight = $state(false);
+
+  let bubbles = [];
+  let foods = [];
+  let particles = [];
+
+  // 水槽に現れるトイレの汚れ（最大2個）
+  let dirtPatches = $state([]);
+  let dirtTimer = 0;
+  let nextDirtAt = 90 + Math.floor(Math.random() * 61);
+
+  let canvasEl, gameCanvasEl;
+  let ctx, gctx;
+
+  let showGameModal = $state(false);
+  let showStoreModal = $state(false);
+  let tapCounter = 0;
+  let tapResetTimer = null;
+
+  let stageText = $derived(["ベビー期", "キッズ期", "アダルト期"][stage]);
+  let branchText = $derived(stage === 0 ? "タイプ: まんまる" : `タイプ: ${{puku:'ぷくぷく系', sui:'すいすい系', fuwa:'ふわふわ系'}[branchType]}`);
+
+  let alertMsg = $state('');
+
+  function showAlert(msg) {
+    alertMsg = msg;
+    setTimeout(() => { alertMsg = ''; }, 2500);
   }
-}
 
-#docs {
-  border-right: 1px solid var(--border);
+  onMount(() => {
+    ctx = canvasEl.getContext('2d');
+    
+    for(let i=0; i<12; i++) {
+      bubbles.push({
+        x: Math.random() * 128,
+        y: Math.random() * 128,
+        r: Math.random() * 1.5 + 0.5,
+        speed: Math.random() * 0.15 + 0.05
+      });
+    }
 
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
+    loadData();
+
+    let animId;
+    function loop() {
+      updatePhysics();
+      render();
+      animId = requestAnimationFrame(loop);
+    }
+    loop();
+
+    const interval = setInterval(() => {
+      aliveSeconds++; // 毎秒カウントアップ
+
+      satiety = Math.max(0, satiety - 0.16);
+      cleanliness = Math.max(0, cleanliness - 0.11);
+
+      // トイレの汚れは時間とともに現れる。放置してもペナルティはない。
+      if (dirtPatches.length < 2) {
+        dirtTimer++;
+        if (dirtTimer >= nextDirtAt) {
+          // キャラクターの近くを避けて、水槽の端寄りに汚れを出す
+          let dirtX;
+          let dirtY;
+          do {
+            dirtX = 10 + Math.random() * 108;
+            dirtY = 18 + Math.random() * 100;
+          } while (dirtX > 40 && dirtX < 88 && dirtY > 35 && dirtY < 95);
+
+          dirtPatches = [...dirtPatches, {
+            id: Date.now() + Math.random(),
+            x: dirtX,
+            y: dirtY
+          }];
+          dirtTimer = 0;
+          nextDirtAt = 120 + Math.floor(Math.random() * 91);
+        }
+      }
+      
+      let moodLoss = 0.08;
+      if (satiety < 30 || cleanliness < 30) {
+        moodLoss *= 3;
+      }
+      mood = Math.max(0, mood - moodLoss);
+
+      checkEvolution();
+      saveData();
+    }, 1000);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      clearInterval(interval);
+    };
+  });
+
+  function saveData() {
+    localStorage.setItem('minamo_save_v3', JSON.stringify({
+      aliveSeconds, coins, stage, branchType, mood, satiety, cleanliness, petCount,
+      petCareCount, feedCareCount, playCareCount, discoveredTypes, generation,
+      inventory, dirtPatches, lastLeaveTime: Date.now()
+    }));
   }
-}
 
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
+  function loadData() {
+    const data = localStorage.getItem('minamo_save_v3');
+    if (data) {
+      try {
+        const obj = JSON.parse(data);
+        aliveSeconds = obj.aliveSeconds || 0;
+        coins = obj.coins ?? 50;
+        stage = obj.stage || 0;
+        branchType = obj.branchType || 'puku';
+        mood = obj.mood ?? 80;
+        satiety = obj.satiety ?? 80;
+        cleanliness = obj.cleanliness ?? 90;
+        petCount = obj.petCount || 0;
+        petCareCount = obj.petCareCount || 0;
+        feedCareCount = obj.feedCareCount || 0;
+        playCareCount = obj.playCareCount || 0;
+        discoveredTypes = Array.isArray(obj.discoveredTypes) ? obj.discoveredTypes : [];
+        generation = obj.generation || 1;
+        inventory = obj.inventory || ['ball'];
+        dirtPatches = Array.isArray(obj.dirtPatches) ? obj.dirtPatches : [];
 
-  .logo {
-    height: 18px;
+        if (obj.lastLeaveTime) {
+          const offlineSeconds = Math.floor((Date.now() - obj.lastLeaveTime) / 1000);
+          if (offlineSeconds > 10) {
+            aliveSeconds += offlineSeconds;
+            const hours = offlineSeconds / 3600;
+            satiety = Math.max(0, satiety - hours * 16.6);
+            mood = Math.max(0, mood - hours * 12.5);
+            cleanliness = Math.max(0, cleanliness - hours * 8.3);
+
+            const minutesPassed = Math.floor(offlineSeconds / 60);
+            if (minutesPassed >= 1) {
+              showAlert(`${minutesPassed}分間おやすみしていました`);
+            }
+          }
+        }
+      } catch(e){}
+    }
   }
 
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
+  function getCurrentSprite() {
+    if (isSquished) {
+      if (stage === 0) return { sprite: babySquish, size: 16 };
+      if (branchType === 'sui') return { sprite: suiSquish, size: 24 };
+      if (branchType === 'fuwa') return { sprite: fuwaSquish, size: 24 };
+      return { sprite: pukuSquish, size: 24 };
+    }
+
+    if (isSulking) {
+      if (stage === 0) return { sprite: babySulk, size: 16 };
+      return { sprite: kidsSulk, size: 24 };
+    }
+
+    if (stage === 0) return { sprite: babySprite, size: 16 };
+    if (stage === 1) {
+      if (branchType === 'sui') return { sprite: kidsSui, size: 24 };
+      if (branchType === 'fuwa') return { sprite: kidsFuwa, size: 24 };
+      return { sprite: kidsPuku, size: 24 };
+    }
+    // アダルト期 (最終形態)
+    if (branchType === 'sui') return { sprite: kidsSui, size: 24 };
+    if (branchType === 'fuwa') return { sprite: kidsFuwa, size: 24 };
+    return { sprite: kidsPuku, size: 24 };
+  }
+
+  function updatePhysics() {
+    // ベビー期以外で、おなか・ごきげんがかなり低い時だけいじける
+    isSulking = (stage > 0 && (satiety < 20 || mood < 20));
+
+    if (isSquished) {
+      squishTimer++;
+      if (squishTimer > 90) {
+        isSquished = false;
+        squishTimer = 0;
+      }
+      return;
+    }
+
+    if (isSulking) {
+      targetX = 104;
+      targetY = 104;
+    } else if (activeToy) {
+      targetX = toyX;
+      targetY = toyY;
+    } else if (foods.length > 0) {
+      targetX = foods[0].x;
+      targetY = foods[0].y;
+    } else if (Math.random() < 0.01) {
+      targetX = 20 + Math.random() * 88;
+      targetY = 20 + Math.random() * 88;
+    }
+
+    vx = vx * 0.92 + (targetX - posX) * 0.006;
+    vy = vy * 0.92 + (targetY - posY) * 0.006;
+
+    posX += vx;
+    posY += vy;
+
+    for (let i = foods.length - 1; i >= 0; i--) {
+      const f = foods[i];
+      if (Math.hypot(posX - f.x, posY - f.y) < 12) {
+        foods.splice(i, 1);
+        satiety = Math.min(100, satiety + 25);
+        playSE('feed');
+        addHeartParticle(f.x, f.y);
+        showAlert("パクッ！ (おなか +25)");
+      }
+    }
+
+    if (activeToy && Math.hypot(posX - toyX, posY - toyY) < 18) {
+      mood = Math.min(100, mood + 0.8);
+      if (Math.random() < 0.15) {
+        addHeartParticle(toyX, toyY);
+      }
+    }
+  }
+
+  /* ------------------------------------------
+     進化タイミング & 演出処理
+     ------------------------------------------ */
+  // いちばん多いお世話から進化タイプを決める。同数なら既存のタイプを優先。
+  function getCareType() {
+    const maxCount = Math.max(petCareCount, feedCareCount, playCareCount);
+    if (maxCount === 0) return branchType || 'puku';
+    if (playCareCount === maxCount) return 'fuwa';
+    if (feedCareCount === maxCount) return 'sui';
+    return 'puku';
+  }
+
+  function typeName(type) {
+    return ({ puku: 'ぷくぷく系', sui: 'すいすい系', fuwa: 'ふわふわ系' })[type] || 'ぷくぷく系';
+  }
+
+  function triggerEvolveCutin(nextStage) {
+    if (isEvolving) return;
+    initAudio();
+    playSE('evolve');
+    isEvolving = true;
+    evolveText = nextStage === 1 ? 'キッズ期へ進化！' : `${typeName(getCareType())}に進化！`;
+
+    setTimeout(() => {
+      branchType = getCareType();
+      stage = nextStage;
+      if (nextStage === 2 && !discoveredTypes.includes(branchType)) {
+        discoveredTypes = [...discoveredTypes, branchType];
+      }
+    }, 1200);
+
+    setTimeout(() => {
+      isEvolving = false;
+      showAlert(nextStage === 1 ? '✨ キッズ期に成長したよ！' : `✨ ${typeName(branchType)}の大人に進化したよ！`);
+      saveData();
+    }, 3200);
+  }
+
+  function checkEvolution() {
+    if (isEvolving) return;
+    const totalCare = petCareCount + feedCareCount + playCareCount;
+
+    // 時間だけでなく、お世話も一定回数していると成長する。
+    if (stage === 0 && aliveSeconds >= 600 && totalCare >= 3) {
+      triggerEvolveCutin(1);
+    } else if (stage === 1 && aliveSeconds >= 1800 && totalCare >= 8) {
+      triggerEvolveCutin(2);
+    }
+  }
+
+  function startNextGeneration() {
+    if (stage !== 2) return;
+    showGenerationChoice = false;
+    aliveSeconds = 0;
+    generation += 1;
+    stage = 0;
+    branchType = 'puku';
+    petCount = 0;
+    petCareCount = 0;
+    feedCareCount = 0;
+    playCareCount = 0;
+    mood = 80;
+    satiety = 80;
+    cleanliness = 100;
+    dirtPatches = [];
+    dirtTimer = 0;
+    foods = [];
+    particles = [];
+    isSquished = false;
+    isSulking = false;
+    posX = 64;
+    posY = 64;
+    saveData();
+    showAlert('🥚 新しいたまごを迎えたよ！');
+  }
+
+  function addHeartParticle(x, y) {
+    for(let i=0; i<3; i++) {
+      particles.push({
+        x: x + (Math.random()-0.5)*6,
+        y: y + (Math.random()-0.5)*6,
+        vx: (Math.random()-0.5)*0.3,
+        vy: -Math.random()*0.4 - 0.1,
+        life: 25, color: '#f43f5e'
+      });
+    }
+  }
+
+  function drawPixelSprite(targetCtx, spriteData, startX, startY, size) {
+    for(let y=0; y<size; y++) {
+      for(let x=0; x<size; x++) {
+        const char = spriteData[y]?.[x];
+        if(char && P[char] && P[char] !== "transparent") {
+          targetCtx.fillStyle = P[char];
+          targetCtx.fillRect(Math.floor(startX + x), Math.floor(startY + y), 1, 1);
+        }
+      }
+    }
+  }
+
+  function render() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, 128, 128);
+
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, 128);
+    if (isNight) {
+      bgGrad.addColorStop(0, '#030712');
+      bgGrad.addColorStop(1, '#0b1528');
+    } else {
+      bgGrad.addColorStop(0, '#0c2a4a');
+      bgGrad.addColorStop(1, '#051329');
+    }
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 128, 128);
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
+    bubbles.forEach(b => {
+      b.y -= b.speed;
+      if (b.y < -5) { b.y = 130; b.x = Math.random() * 128; }
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    if (activeToy) {
+      if (activeToy === 'ball') {
+        ctx.fillStyle = '#f43f5e';
+        ctx.beginPath();
+        ctx.arc(toyX, toyY, 4, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (activeToy === 'ring') {
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(toyX, toyY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(Math.floor(toyX - 6), Math.floor(toyY - 1), 12, 2);
+        ctx.fillRect(Math.floor(toyX - 1), Math.floor(toyY - 6), 2, 12);
+        ctx.fillStyle = '#061126';
+        ctx.beginPath();
+        ctx.arc(toyX, toyY, 3, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (activeToy === 'bear') {
+        const bx = Math.floor(toyX);
+        const by = Math.floor(toyY);
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(bx - 4, by - 5, 2, 2);
+        ctx.fillRect(bx + 2, by - 5, 2, 2);
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(bx - 3, by - 4, 6, 5);
+        ctx.fillRect(bx - 3, by + 1, 6, 4);
+        ctx.fillStyle = '#fde68a';
+        ctx.fillRect(bx - 1, by - 2, 2, 2);
+        ctx.fillStyle = '#111827';
+        ctx.fillRect(bx - 2, by - 3, 1, 1);
+        ctx.fillRect(bx + 1, by - 3, 1, 1);
+        ctx.fillRect(bx, by - 2, 1, 1);
+      } else if (activeToy === 'star') {
+        const sx = Math.floor(toyX);
+        const sy = Math.floor(toyY);
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(sx - 1, sy - 4, 3, 9);
+        ctx.fillRect(sx - 4, sy - 1, 9, 3);
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(sx - 1, sy - 1, 3, 3);
+      } else if (activeToy === 'chest') {
+        const cx = Math.floor(toyX);
+        const cy = Math.floor(toyY);
+        ctx.fillStyle = '#854d0e';
+        ctx.fillRect(cx - 5, cy - 3, 11, 7);
+        ctx.fillStyle = '#eab308';
+        ctx.fillRect(cx - 5, cy - 3, 11, 2);
+        ctx.fillRect(cx - 1, cy, 3, 2);
+      }
+    }
+
+    ctx.fillStyle = "#fbbf24";
+    for(let i = foods.length - 1; i >= 0; i--) {
+      ctx.fillRect(Math.floor(foods[i].x - 2), Math.floor(foods[i].y - 2), 4, 4);
+    }
+
+    // トイレの汚れ。暗い背景でも見つけやすい、にごった黄緑色の泡のかたまり
+    dirtPatches.forEach(dirt => {
+      const x = Math.floor(dirt.x);
+      const y = Math.floor(dirt.y);
+
+      // 汚れの中心位置はそのままに、見た目だけ70%に縮小する
+      ctx.save();
+      ctx.translate(x * 0.3, y * 0.3);
+      ctx.scale(0.7, 0.7);
+
+      // うっすらした輪郭で「ここをタップ」と分かりやすくする
+      ctx.fillStyle = 'rgba(210, 220, 145, 0.18)';
+      ctx.fillRect(x - 9, y - 7, 18, 14);
+      ctx.fillRect(x - 7, y - 9, 14, 18);
+
+      // モヤモヤした汚れの本体（黒ではなく、濁ったオリーブ色）
+      ctx.fillStyle = '#626b43';
+      ctx.fillRect(x - 6, y - 2, 12, 6);
+      ctx.fillRect(x - 4, y - 5, 8, 10);
+      ctx.fillRect(x - 2, y - 7, 4, 2);
+      ctx.fillRect(x - 8, y, 3, 3);
+      ctx.fillRect(x + 5, y - 1, 4, 3);
+
+      // 泡の明るい縁とハイライト
+      ctx.fillStyle = '#a3ad69';
+      ctx.fillRect(x - 4, y - 4, 4, 2);
+      ctx.fillRect(x + 1, y - 3, 3, 2);
+      ctx.fillRect(x - 5, y + 2, 3, 2);
+      ctx.fillStyle = '#e0d99a';
+      ctx.fillRect(x - 3, y - 3, 2, 2);
+      ctx.fillRect(x + 2, y - 2, 1, 1);
+
+      // 汚れのまわりに小さな泡を浮かべる
+      ctx.fillStyle = '#cbd5a0';
+      ctx.fillRect(x - 7, y - 8, 2, 2);
+      ctx.fillRect(x + 5, y - 7, 2, 2);
+      ctx.fillRect(x + 7, y + 4, 2, 2);
+
+      ctx.restore();
+    });
+
+    const spr = getCurrentSprite();
+    drawPixelSprite(ctx, spr.sprite, posX - spr.size/2, posY - spr.size/2, spr.size);
+
+    for(let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx; p.y += p.vy; p.life--;
+      ctx.fillStyle = p.color;
+      ctx.fillRect(Math.floor(p.x), Math.floor(p.y), 2, 2);
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+  }
+
+  function handleFeed() {
+    initAudio();
+    if (satiety >= 100) {
+      showAlert("お腹がいっぱいです！");
+      return;
+    }
+    feedCareCount++;
+    const offsetX = vx >= 0 ? 12 : -12;
+    foods = [{ x: Math.max(10, Math.min(118, posX + offsetX)), y: posY }];
+    saveData();
+  }
+
+  function handlePet() {
+    initAudio();
+    petCount++;
+    petCareCount++;
+    mood = Math.min(100, mood + 5);
+
+    tapCounter++;
+    clearTimeout(tapResetTimer);
+    tapResetTimer = setTimeout(() => { tapCounter = 0; }, 1000);
+
+    if (tapCounter >= 5 && !isSquished) {
+      isSquished = true;
+      squishTimer = 0;
+      posX = 64; posY = 64;
+      playSE('squish');
+      showAlert("ガラスにピタッ！");
+      tapCounter = 0;
+    } else {
+      playSE('pet');
+      addHeartParticle(posX, posY);
+    }
+  }
+
+  function handleAquariumClick(event) {
+    // クリック位置を、水槽キャンバスの128×128座標に変換する
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width * 128;
+    const y = (event.clientY - rect.top) / rect.height * 128;
+
+    // 汚れをタップした場合は、なでる動作を発生させずに片付ける
+    const hitIndex = dirtPatches.findIndex(dirt => {
+      const dx = x - dirt.x;
+      const dy = y - dirt.y;
+      return Math.sqrt(dx * dx + dy * dy) <= 12;
+    });
+
+    if (hitIndex !== -1) {
+      initAudio();
+      const dirt = dirtPatches[hitIndex];
+      dirtPatches = dirtPatches.filter((_, index) => index !== hitIndex);
+      for (let i = 0; i < 8; i++) {
+        particles.push({
+          x: dirt.x + (Math.random() - 0.5) * 12,
+          y: dirt.y + (Math.random() - 0.5) * 12,
+          vx: (Math.random() - 0.5) * 1.2,
+          vy: (Math.random() - 0.5) * 1.2,
+          life: 12 + Math.floor(Math.random() * 8),
+          color: '#67e8f9'
+        });
+      }
+      playSE('clean');
+      showAlert('汚れを片付けたよ！');
+      saveData();
+      return;
+    }
+
+    handlePet();
+  }
+
+  function handleClean() {
+    initAudio();
+    cleanliness = 100;
+    mood = Math.min(100, mood + 5);
+    playSE('clean');
+    showAlert("水槽が綺麗になった！（きれいさ100% / ご機嫌+5）");
+    saveData();
+  }
+
+  function handlePlayWithToy(toy) {
+    initAudio();
+    if (activeToy === toy) {
+      activeToy = null;
+      showAlert("おもちゃを片付けました");
+      return;
+    }
+    activeToy = toy;
+    playCareCount++;
+    toyX = 30 + Math.random() * 68;
+    toyY = 30 + Math.random() * 68;
+    mood = Math.min(100, mood + 20);
+    playSE('pet');
+    const toyName = toy === 'ball' ? 'ボール' : toy === 'ring' ? '浮き輪' : toy === 'bear' ? 'ぬいぐるみ' : toy === 'star' ? 'お星さま' : 'たからばこ';
+    showAlert(`${toyName}を出したよ！(ご機嫌+20)`);
+  }
+
+  function handleReset() {
+    if (confirm("データをリセットしますか？")) {
+      localStorage.removeItem('minamo_save_v3');
+
+      // 基本データの初期化
+      aliveSeconds = 0;
+      coins = 50;
+      stage = 0;
+      branchType = 'puku';
+      
+      // メーターをすべてゼロに初期化
+      mood = 0;
+      satiety = 0;
+      cleanliness = 0;
+      
+      petCount = 0;
+      petCareCount = 0;
+      feedCareCount = 0;
+      playCareCount = 0;
+      discoveredTypes = [];
+      generation = 1;
+      showDex = false;
+      showGenerationChoice = false;
+      inventory = ['ball'];
+      dirtPatches = [];
+      dirtTimer = 0;
+      nextDirtAt = 90 + Math.floor(Math.random() * 61);
+      activeToy = null;
+      foods = [];
+      particles = [];
+      isSquished = false;
+      isSulking = false;
+      isEvolving = false;
+      posX = 64;
+      posY = 64;
+      vx = 0;
+      vy = 0;
+
+      saveData();
+      showAlert("データをリセット！ベビー期（メーター0）からスタートします！");
+    }
+  }
+
+  let gState = $state({ x: 64, items: [], score: 0, timer: 30, active: false, ready: false });
+  let gAnimId, gTimerId, gKeyHandler;
+
+  function openGame() {
+    initAudio();
+    showGameModal = true;
+    gState = { x: 64, items: [], score: 0, timer: 30, active: false, ready: false };
+    setTimeout(initMiniGameCanvas, 50);
+  }
+
+  function initMiniGameCanvas() {
+    if (!gameCanvasEl) return;
+    gctx = gameCanvasEl.getContext('2d');
+    // 内部解像度は高くしつつ、ゲーム内の座標は従来どおり128×128で扱う
+    gctx.setTransform(4, 0, 0, 4, 0, 0);
+    gctx.fillStyle = '#061126';
+    gctx.fillRect(0, 0, 128, 128);
+    gctx.fillStyle = '#38bdf8';
+    gctx.font = '10px monospace';
+    gctx.fillText("TAP START TO PLAY", 12, 64);
+  }
+
+  function startMiniGame() {
+    if (!gameCanvasEl) return;
+    gctx = gameCanvasEl.getContext('2d');
+    // 再スタート時にも拡大率が重ならないように固定する
+    gctx.setTransform(4, 0, 0, 4, 0, 0);
+    gState = { x: 64, items: [], score: 0, timer: 30, active: true, ready: true };
+    let frame = 0;
+
+    clearInterval(gTimerId);
+    cancelAnimationFrame(gAnimId);
+
+    gTimerId = setInterval(() => {
+      if (!gState.active) return;
+      gState.timer--;
+      if (gState.timer <= 0) {
+        endMiniGame("タイムアップ！");
+      }
+    }, 1000);
+
+    const handleKeyDown = (e) => {
+      if (!gState.active) return;
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        movePlayer(-12);
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        movePlayer(12);
+      }
+    };
+    gKeyHandler = handleKeyDown;
+    window.addEventListener('keydown', handleKeyDown);
+
+    function gameLoop() {
+      if (!gState.active) {
+        window.removeEventListener('keydown', handleKeyDown);
+        return;
+      }
+      frame++;
+
+      if (frame % 30 === 0) {
+        const isBomb = Math.random() < 0.2;
+        gState.items.push({
+          x: 10 + Math.random() * 108,
+          y: -10,
+          type: isBomb ? 'bomb' : 'rice',
+          speed: 0.8 + Math.random() * 0.6
+        });
+      }
+
+      gctx.fillStyle = '#061126';
+      gctx.fillRect(0, 0, 128, 128);
+
+      for (let i = gState.items.length - 1; i >= 0; i--) {
+        const item = gState.items[i];
+        item.y += item.speed;
+
+        if (item.type === 'rice') {
+          gctx.fillStyle = '#ffffff';
+          gctx.beginPath();
+          gctx.arc(item.x, item.y, 4, 0, Math.PI * 2);
+          gctx.fill();
+          gctx.fillStyle = '#111827';
+          gctx.fillRect(item.x - 2, item.y, 4, 3);
+        } else {
+          gctx.fillStyle = '#ef4444';
+          gctx.beginPath();
+          gctx.arc(item.x, item.y, 4, 0, Math.PI * 2);
+          gctx.fill();
+        }
+
+        if (Math.hypot(item.x - gState.x, item.y - 104) < 14) {
+          if (item.type === 'rice') {
+            gState.score += 10;
+            playSE('feed');
+          } else {
+            playSE('squish');
+            window.removeEventListener('keydown', handleKeyDown);
+            endMiniGame("ゴミに当たっちゃった！");
+            return;
+          }
+          gState.items.splice(i, 1);
+          continue;
+        }
+
+        if (item.y > 135) {
+          gState.items.splice(i, 1);
+        }
+      }
+
+      const spr = getCurrentSprite();
+      drawPixelSprite(gctx, spr.sprite, gState.x - spr.size / 2, 104 - spr.size / 2, spr.size);
+
+      gctx.fillStyle = '#fff';
+      gctx.font = '9px monospace';
+      gctx.fillText("SCORE: " + gState.score, 6, 12);
+      gctx.fillText("TIME: " + gState.timer + "s", 80, 12);
+
+      gAnimId = requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
+  }
+
+  function movePlayer(dir) {
+    if (!gState.active) return;
+    gState.x = Math.max(14, Math.min(114, gState.x + dir));
+  }
+
+  function handleGameTap(event) {
+    if (!gState.active) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const tapX = event.clientX - rect.left;
+
+    if (tapX < rect.width / 2) {
+      movePlayer(-16);
+    } else {
+      movePlayer(16);
+    }
+  }
+
+  function endMiniGame(reason = "") {
+    if (!gState.active) return;
+
+    gState.active = false;
+    clearInterval(gTimerId);
+    cancelAnimationFrame(gAnimId);
+
+    // タイムアップまで生き残れたら、スコア分に加えてクリアボーナスを渡す
+    const cleared = reason === "タイムアップ！";
+    const bonusCoins = cleared ? 30 : 0;
+    const earnedCoins = gState.score + bonusCoins;
+
+    if (gKeyHandler) {
+      window.removeEventListener('keydown', gKeyHandler);
+      gKeyHandler = null;
+    }
+
+    coins += earnedCoins;
+    mood = Math.min(100, mood + 15);
+    saveData();
+
+    const bonusMessage = cleared ? `\nクリアボーナス: +${bonusCoins} コイン！` : "";
+    alert(`${reason}\nスコア: ${gState.score}点${bonusMessage}\n🪙 合計 +${earnedCoins} コイン獲得！`);
+    showGameModal = false;
+  }
+
+  function buyToy(toyId, cost) {
+    initAudio();
+    if (coins < cost) {
+      showAlert("コインが足りません！");
+      return;
+    }
+    coins -= cost;
+    inventory = [...inventory, toyId];
+    playSE('buy');
+    showAlert("おもちゃを購入しました！");
+    saveData();
+  }
+</script>
+
+<main class="app-container">
+  <header>
+    <h1><span>🫧</span> Minamo</h1>
+    <div class="header-controls">
+      <div class="coin-badge">🪙 {coins}</div>
+      <button class="icon-btn" onclick={() => isNight = !isNight}>🌙 昼夜</button>
+      <button class="icon-btn" onclick={handleReset}>🔄 リセット</button>
+    </div>
+  </header>
+
+  {#if alertMsg}
+    <div class="toast-alert">{alertMsg}</div>
+  {/if}
+
+  <div class="aquarium-card">
+    <div class="canvas-wrapper" onclick={handleAquariumClick} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && handlePet()}>
+      <canvas bind:this={canvasEl} width="128" height="128"></canvas>
+      <div class="status-overlay">
+        <div class="badge">{stageText}</div>
+        <div class="badge">{branchText}</div>
+      </div>
+      
+      {#if isSulking}
+        <div class="sulking-msg">⋯⋯(画面の隅っこでいじけている)</div>
+      {/if}
+
+      <!-- 進化カットイン演出オーバーレイ -->
+      {#if isEvolving}
+        <div class="evolve-overlay">
+          <div class="evolve-flash"></div>
+          <div class="evolve-exclamation">！！</div>
+          <div class="evolve-banner">{evolveText}</div>
+        </div>
+      {/if}
+    </div>
+  </div>
+
+    <div class="stats-panel">
+    <div class="stat-item">
+      <div class="stat-label"><span>おなか</span><span>{Math.round(satiety)}%</span></div>
+      <div class="bar-bg"><div class="bar-fill satiety" style="width: {satiety}%"></div></div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label"><span>ごきげん</span><span>{Math.round(mood)}%</span></div>
+      <div class="bar-bg"><div class="bar-fill mood" style="width: {mood}%"></div></div>
+    </div>
+    <div class="stat-item toilet-stat">
+      <div class="stat-label"><span>トイレ</span><span>{Math.max(0, 100 - dirtPatches.length * 50)}%</span></div>
+      <div class="bar-bg"><div class="bar-fill toilet" style="width: {Math.max(0, 100 - dirtPatches.length * 50)}%"></div></div>
+      <div class="toilet-status" class:dirty={dirtPatches.length > 0}>
+        <span class="toilet-dot"></span>
+        {dirtPatches.length > 0 ? '汚れあり' : 'きれい'}
+      </div>
+    </div>
+    <div class="stat-item clean-stat">
+      <div class="stat-label"><span>きれいさ</span><span>{Math.round(cleanliness)}%</span></div>
+      <div class="bar-bg"><div class="bar-fill clean" style="width: {cleanliness}%"></div></div>
+    </div>
+  </div>
+
+
+  <div class="action-grid">
+    <button class="btn-action" onclick={handleFeed}>
+      <span class="icon">🍱</span><span>ごはん</span>
+    </button>
+    <button class="btn-action" onclick={handlePet}>
+      <span class="icon">✋</span><span>なでる</span>
+    </button>
+    <button class="btn-action" onclick={handleClean}>
+      <span class="icon">🧹</span><span>そうじ</span>
+    </button>
+    <button class="btn-action" onclick={() => showStoreModal = true}>
+      <span class="icon">🛍️</span><span>ストア</span>
+    </button>
+  </div>
+
+  <div class="toy-shelf">
+    <div class="shelf-title">🧸 持っているおもちゃ（タップで出す）:</div>
+    <div class="toy-buttons">
+      {#each inventory as toy}
+        <button class="toy-btn" class:active={activeToy === toy} onclick={() => handlePlayWithToy(toy)}>
+          {toy === 'ball' ? '🔴 ボール' : toy === 'ring' ? '⭕ 浮き輪' : toy === 'bear' ? '🧸 くま' : toy === 'star' ? '🌟 スター' : '🐚 たからばこ'}
+        </button>
+      {/each}
+      <button class="btn-minigame" onclick={openGame}>🎮 おにぎりキャッチ</button>
+    </div>
+  </div>
+
+  {#if stage === 2}
+    <section class="evolution-panel">
+      <div class="evolution-heading">🌱 第{generation}世代・大人になったよ！</div>
+      <p>今の生き物と暮らし続けても、新しいたまごを迎えてもOK。</p>
+      <div class="evolution-actions">
+        <button class="evolution-button" onclick={() => showDex = !showDex}>📖 図鑑 {showDex ? 'を閉じる' : 'を見る'}</button>
+        <button class="evolution-button egg-button" onclick={() => showGenerationChoice = !showGenerationChoice}>🥚 次のたまご</button>
+      </div>
+      {#if showGenerationChoice}
+        <div class="generation-confirm">
+          <p>今の生き物は図鑑に記録されているよ。次の世代を始める？</p>
+          <div class="evolution-actions">
+            <button class="evolution-button" onclick={() => showGenerationChoice = false}>今の子と暮らす</button>
+            <button class="evolution-button egg-button" onclick={startNextGeneration}>新しいたまごを迎える</button>
+          </div>
+        </div>
+      {/if}
+      {#if showDex}
+        <div class="dex-list">
+          {#each ['puku', 'sui', 'fuwa'] as type}
+            <div class="dex-entry" class:undiscovered={!discoveredTypes.includes(type)}>
+              <span>{discoveredTypes.includes(type) ? '◆' : '◇'}</span>
+              <span>{discoveredTypes.includes(type) ? typeName(type) : '？？？'}</span>
+              <small>{discoveredTypes.includes(type) ? '発見済み' : 'まだ出会っていない'}</small>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </section>
+  {/if}
+</main>
+
+{#if showGameModal}
+  <div class="modal">
+    <div class="modal-content">
+      <h3 class="modal-title">🍙 おにぎりキャッチ</h3>
+      <div
+        class="minigame-canvas-wrap"
+        onpointerdown={handleGameTap}
+        role="application"
+        aria-label="おにぎりキャッチ。画面の左半分をタップすると左、右半分をタップすると右へ移動"
+      >
+        <canvas bind:this={gameCanvasEl} width="512" height="512"></canvas>
+      </div>
+
+      {#if !gState.ready}
+        <p class="game-desc">落ちてくるおにぎりをキャッチしよう！<br>赤いゴミに当たるとゲーム終了！</p>
+        <button class="btn-start" onclick={startMiniGame}>▶ スタート！</button>
+      {:else}
+        <div class="touch-controls">
+          <button class="btn-move" onclick={() => movePlayer(-16)}>◀ ひだり</button>
+          <button class="btn-move" onclick={() => movePlayer(16)}>みぎ ▶</button>
+        </div>
+      {/if}
+
+      <button class="modal-close" onclick={() => { showGameModal = false; gState.active = false; clearInterval(gTimerId); cancelAnimationFrame(gAnimId); }}>閉じる</button>
+    </div>
+  </div>
+{/if}
+
+{#if showStoreModal}
+  <div class="modal">
+    <div class="modal-content">
+      <h3 class="modal-title">🛍️ おもちゃストア</h3>
+      <div class="store-coins">所持コイン: 🪙 {coins}</div>
+      
+      <div class="store-list">
+        <div class="store-item">
+          <span>⭕ ぷかぷか浮き輪</span>
+          {#if inventory.includes('ring')}
+            <button class="btn-bought" disabled>購入済み</button>
+          {:else}
+            <button class="btn-buy" onclick={() => buyToy('ring', 50)}>🪙 50で購入</button>
+          {/if}
+        </div>
+        <div class="store-item">
+          <span>🌟 お星さま</span>
+          {#if inventory.includes('star')}
+            <button class="btn-bought" disabled>購入済み</button>
+          {:else}
+            <button class="btn-buy" onclick={() => buyToy('star', 80)}>🪙 80で購入</button>
+          {/if}
+        </div>
+        <div class="store-item">
+          <span>🧸 ぬいぐるみ</span>
+          {#if inventory.includes('bear')}
+            <button class="btn-bought" disabled>購入済み</button>
+          {:else}
+            <button class="btn-buy" onclick={() => buyToy('bear', 100)}>🪙 100で購入</button>
+          {/if}
+        </div>
+        <div class="store-item">
+          <span>🐚 たからばこ</span>
+          {#if inventory.includes('chest')}
+            <button class="btn-bought" disabled>購入済み</button>
+          {:else}
+            <button class="btn-buy" onclick={() => buyToy('chest', 150)}>🪙 150で購入</button>
+          {/if}
+        </div>
+      </div>
+
+      <button class="modal-close" onclick={() => showStoreModal = false}>閉じる</button>
+    </div>
+  </div>
+{/if}
+
+<style>
+  :global(body) {
+    margin: 0;
+    padding: 12px;
+    background: #0b1329;
+    color: #f1f5f9;
+    font-family: sans-serif;
     display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
     justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
+    align-items: center;
+    min-height: 100vh;
+    user-select: none;
   }
-}
 
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
+  .app-container {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: relative;
   }
-}
 
-.ticks {
-  position: relative;
-  width: 100%;
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #132247;
+    padding: 8px 14px;
+    border-radius: 14px;
+    border: 1px solid #1f3768;
+  }
 
-  &::before,
-  &::after {
-    content: '';
+  h1 { margin: 0; font-size: 1rem; color: #38bdf8; }
+  .header-controls { display: flex; gap: 6px; align-items: center; }
+  .coin-badge { background: #1e293b; border: 1px solid #fbbf24; color: #fbbf24; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+  .icon-btn { background: #1e325c; border: 1px solid #1f3768; color: #fff; padding: 5px 8px; border-radius: 8px; cursor: pointer; font-size: 0.75rem; }
+
+  .toast-alert {
     position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(14, 165, 233, 0.95);
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    z-index: 50;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    pointer-events: none;
   }
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
+  .aquarium-card {
+    background: #132247;
+    border-radius: 16px;
+    padding: 10px;
+    border: 2px solid #1f3768;
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+
+  .canvas-wrapper {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #061126;
+    border: 2px solid #1a2f53;
+    cursor: pointer;
   }
-}
+
+  canvas { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+
+  .status-overlay {
+    position: absolute;
+    top: 8px; left: 8px; right: 8px;
+    display: flex; justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .badge {
+    background: rgba(15, 23, 42, 0.8);
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .sulking-msg {
+    position: absolute; bottom: 12px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid #3b82f6; color: #93c5fd;
+    padding: 4px 10px; border-radius: 10px; font-size: 0.7rem;
+  }
+
+  .evolve-overlay {
+    position: absolute; inset: 0;
+    background: rgba(3, 7, 18, 0.85);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 20;
+    animation: fadeIn 0.3s forwards;
+  }
+
+  .evolve-flash {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(56,189,248,0) 70%);
+    animation: flashAnim 1.5s infinite alternate;
+  }
+
+  .evolve-exclamation {
+    font-size: 3rem; font-weight: 900; color: #fbbf24;
+    text-shadow: 0 0 20px #f59e0b, 0 0 40px #fbbf24;
+    z-index: 21;
+    animation: popAnim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite alternate;
+  }
+
+  .evolve-banner {
+    margin-top: 10px;
+    background: #0284c7; color: #fff; font-weight: bold;
+    padding: 6px 16px; border-radius: 20px; font-size: 0.85rem;
+    z-index: 21; border: 2px solid #38bdf8;
+    box-shadow: 0 0 15px rgba(56,189,248,0.5);
+  }
+
+  @keyframes flashAnim {
+    0% { opacity: 0.2; transform: scale(0.8); }
+    100% { opacity: 0.8; transform: scale(1.2); }
+  }
+
+  @keyframes popAnim {
+    0% { transform: scale(0.9); }
+    100% { transform: scale(1.3); }
+  }
+
+  .stats-panel {
+    background: #132247;
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid #1f3768;
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+
+  .stat-item { display: flex; flex-direction: column; gap: 3px; }
+  .stat-label { font-size: 0.7rem; color: #94a3b8; display: flex; justify-content: space-between; }
+  .clean-stat { grid-column: 2 / 3; }
+  .toilet-status { display: flex; align-items: center; gap: 5px; min-height: 12px; color: #a3ad69; font-size: 0.68rem; }
+  .toilet-status.dirty { color: #e0d99a; }
+  .toilet-dot { display: inline-block; width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: #a3ad69; }
+  .toilet-status.dirty .toilet-dot { background: #d7d68a; box-shadow: 0 0 5px rgba(215, 214, 138, 0.5); }
+  .bar-bg { height: 6px; background: #0f172a; border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; transition: width 0.3s; }
+  .bar-fill.mood { background: #f43f5e; }
+  .bar-fill.satiety { background: #fbbf24; }
+  .bar-fill.clean { background: #38bdf8; }
+  .bar-fill.toilet { background: #a3ad69; }
+
+  .action-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .btn-action {
+    background: #1e293b; border: 1px solid #1f3768; color: #fff;
+    padding: 8px 2px; border-radius: 10px; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.7rem;
+  }
+  .btn-action:hover { background: #334155; }
+
+  .toy-shelf {
+    background: #132247; border-radius: 12px; padding: 10px; border: 1px solid #1f3768;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .shelf-title { font-size: 0.75rem; color: #94a3b8; }
+  .toy-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+  .toy-btn {
+    background: #1e293b; border: 1px solid #334155; color: #fff;
+    padding: 5px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer;
+  }
+  .toy-btn.active { border-color: #38bdf8; background: #0284c7; }
+  .btn-minigame {
+    margin-left: auto; background: #059669; border: none; color: #fff;
+    padding: 5px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer;
+  }
+
+  .modal {
+    position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal-content {
+    background: #132247; border: 2px solid #1f3768; border-radius: 16px;
+    width: 90%; max-width: 320px; padding: 16px; display: flex; flex-direction: column; gap: 10px; text-align: center;
+  }
+  .modal-title { margin: 0; color: #38bdf8; font-size: 1rem; }
+  .game-desc { font-size: 0.75rem; color: #94a3b8; line-height: 1.4; margin: 0; }
+  .minigame-canvas-wrap { aspect-ratio: 1; background: #000; border-radius: 8px; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .minigame-canvas-wrap canvas { display: block; width: 100%; height: 100%; image-rendering: auto; }
+  .btn-start { background: #0284c7; border: none; color: #fff; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  .touch-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-move { background: #1e293b; border: 1px solid #38bdf8; color: #38bdf8; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  .modal-close { background: #334155; border: none; color: #fff; padding: 6px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+
+  .store-coins { font-size: 0.85rem; color: #fbbf24; font-weight: bold; }
+  .store-list { display: flex; flex-direction: column; gap: 8px; }
+  .store-item { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; }
+  .btn-buy { background: #d97706; border: none; color: #fff; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }
+  .btn-bought { background: #475569; border: none; color: #94a3b8; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; }
+
+  .evolution-panel { background: #132247; border: 1px solid #1f3768; border-radius: 12px; padding: 12px; color: #e2e8f0; display: flex; flex-direction: column; gap: 8px; }
+  .evolution-heading { color: #7dd3fc; font-weight: bold; font-size: 0.9rem; }
+  .evolution-panel p { margin: 0; color: #94a3b8; font-size: 0.75rem; line-height: 1.5; }
+  .evolution-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .evolution-button { flex: 1; min-width: 120px; background: #1e293b; border: 1px solid #38bdf8; color: #e0f2fe; border-radius: 8px; padding: 8px; cursor: pointer; font-size: 0.75rem; }
+  .egg-button { background: #075985; border-color: #0ea5e9; }
+  .generation-confirm { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px solid #334155; }
+  .dex-list { display: flex; flex-direction: column; gap: 6px; }
+  .dex-entry { display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 8px; background: #0f1b35; padding: 8px; border-radius: 6px; font-size: 0.75rem; }
+  .dex-entry small { color: #7dd3fc; font-size: 0.65rem; }
+  .dex-entry.undiscovered { color: #64748b; }
+  .dex-entry.undiscovered small { color: #64748b; }
+</style>
