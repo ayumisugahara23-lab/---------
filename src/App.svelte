@@ -415,7 +415,7 @@
   // 水槽に現れるトイレの汚れ（最大2個）
   let dirtPatches = $state([]);
   let dirtTimer = 0;
-  let nextDirtAt = 90 + Math.floor(Math.random() * 61);
+  let nextDirtAt = 300 + Math.floor(Math.random() * 181);
 
   let canvasEl, gameCanvasEl;
   let ctx, gctx;
@@ -483,7 +483,7 @@
             y: dirtY
           }];
           dirtTimer = 0;
-          nextDirtAt = 120 + Math.floor(Math.random() * 91);
+          nextDirtAt = 300 + Math.floor(Math.random() * 181);
         }
       }
       
@@ -1471,7 +1471,7 @@
       inventory = ['ball'];
       dirtPatches = [];
       dirtTimer = 0;
-      nextDirtAt = 90 + Math.floor(Math.random() * 61);
+      nextDirtAt = 300 + Math.floor(Math.random() * 181);
       activeToy = null;
       submarineMode = 'idle';
       submarineEvent = '';
@@ -1706,7 +1706,6 @@
     <div class="canvas-wrapper" onclick={handleAquariumClick} role="button" tabindex="0" onkeydown={(e) => e.key === 'Enter' && handlePet()}>
       <canvas bind:this={canvasEl} width="128" height="128"></canvas>
       <div class="status-overlay">
-        <div class="badge">{stageText}</div>
         <div class="badge">{branchText}</div>
       </div>
       
@@ -1727,7 +1726,7 @@
 
     <div class="stats-panel">
     <div class="stat-item">
-      <div class="stat-label"><span>おなか</span><span>{Math.round(satiety)}%</span></div>
+      <div class="stat-label"><span>ごはん</span><span>{Math.round(satiety)}%</span></div>
       <div class="bar-bg"><div class="bar-fill satiety" style="width: {satiety}%"></div></div>
     </div>
     <div class="stat-item">
@@ -1772,7 +1771,6 @@
   </div>
 
   {#if stage === 2}
-    <button class="generation-open-button" onclick={() => { showGenerationPanel = true; showGenerationChoice = false; }}>🌱 世代</button>
     {#if showGenerationPanel}
       <div class="generation-modal-backdrop" role="presentation" onclick={(event) => { if (event.target === event.currentTarget) showGenerationPanel = false; }}>
         <section class="evolution-panel generation-popup" role="dialog" aria-modal="true" aria-label="世代の確認">
@@ -1800,6 +1798,9 @@
   <section class="evolution-panel dex-panel">
     <div class="evolution-actions">
       <button class="evolution-button" onclick={() => showDex = !showDex}>📖 図鑑 {showDex ? 'を閉じる' : 'を見る'}</button>
+      {#if stage === 2}
+        <button class="generation-open-button" onclick={() => { showGenerationPanel = true; showGenerationChoice = false; }}>🌱 世代</button>
+      {/if}
     </div>
     {#if showDex}
       <div class="dex-list">
@@ -2414,12 +2415,13 @@ header {
 
 .toast-alert { pointer-events: none; }
 
-/* 大人になったときだけ表示する世代ボタンと、画面中央のポップアップ */
+/* 世代ボタンは図鑑ボタンの右横に並べる */
 .generation-open-button {
-  position: fixed;
-  top: calc(max(8px, env(safe-area-inset-top)) + 48px);
-  right: max(10px, env(safe-area-inset-right));
-  z-index: 25;
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  z-index: 1;
   border: 1px solid #7dd3fc;
   border-radius: 999px;
   padding: 7px 11px;
@@ -2490,6 +2492,460 @@ header {
   .stat-label { font-size: 0.58rem; }
   .toy-shelf { bottom: calc(max(6px, env(safe-area-inset-bottom)) + 52px); }
   .btn-action { min-height: 42px; }
+}
+
+
+
+/* 図鑑ボタンを上部メニューバーの直下へ移動 */
+.dex-panel {
+  position: fixed;
+  top: calc(max(8px, env(safe-area-inset-top)) + 56px);
+  left: max(10px, calc((100vw - 540px) / 2));
+  z-index: 14;
+  width: max-content;
+  max-width: calc(100vw - 20px);
+  margin: 0;
+  padding: 5px 7px;
+  box-sizing: border-box;
+  pointer-events: auto;
+}
+.dex-panel .evolution-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+}
+.dex-panel .evolution-actions > button {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.dex-panel .evolution-button {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+.dex-panel .dex-list {
+  max-height: min(35dvh, 220px);
+  overflow-y: auto;
+}
+
+/* 図鑑ボタンの下にステータスを置き、重なりを防ぐ */
+.stats-panel {
+  top: calc(max(8px, env(safe-area-inset-top)) + 108px);
+}
+
+@media (max-height: 620px) {
+  .dex-panel { top: calc(max(6px, env(safe-area-inset-top)) + 52px); }
+  .stats-panel { top: calc(max(6px, env(safe-area-inset-top)) + 100px); }
+}
+
+
+
+/* ==========================================
+   Minamo メイン画面の仕上げ
+   ・水中背景を画面全体で自然につなげる
+   ・おもちゃを上部メニューへまとめる
+   ・上下の固定メニューと水槽の境界を目立たせない
+   ========================================== */
+:global(html),
+:global(body) {
+  background: #071a33;
+}
+
+:global(body) {
+  padding: 0;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(15, 77, 115, 0.24) 0%, rgba(7, 26, 51, 0) 58%),
+    linear-gradient(180deg, #0b2948 0%, #08213d 48%, #06162d 100%);
+}
+
+.app-container {
+  max-width: 560px;
+  min-height: 100dvh;
+  padding: 0 10px calc(72px + env(safe-area-inset-bottom));
+  gap: 0;
+}
+
+.aquarium-card {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.canvas-wrapper {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+/* 上部のタイトル帯は枠線をなくし、水中背景となじませる */
+.app-container > header {
+  background: linear-gradient(180deg, rgba(8, 31, 57, 0.78), rgba(8, 31, 57, 0.34));
+  border: 0;
+  border-radius: 0 0 14px 14px;
+  box-shadow: 0 8px 22px rgba(0, 8, 24, 0.08);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* 図鑑・世代を上段に */
+.dex-panel {
+  top: calc(max(8px, env(safe-area-inset-top)) + 52px);
+  left: 10px;
+  width: max-content;
+  max-width: calc(100vw - 20px);
+  padding: 5px 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* 所持おもちゃも上部にまとめる */
+.toy-shelf {
+  top: calc(max(8px, env(safe-area-inset-top)) + 96px);
+  bottom: auto;
+  left: 10px;
+  width: calc(100% - 20px);
+  max-width: 540px;
+  transform: none;
+  margin: 0;
+  padding: 5px 8px 6px;
+  gap: 4px;
+  background: linear-gradient(90deg, rgba(8, 31, 57, 0.62), rgba(8, 31, 57, 0.28));
+  border: 0;
+  border-radius: 10px;
+  box-shadow: none;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 9;
+}
+
+.shelf-title {
+  color: #b7d3e8;
+}
+
+.toy-buttons {
+  scrollbar-width: none;
+}
+.toy-buttons::-webkit-scrollbar {
+  display: none;
+}
+
+/* ステータスはおもちゃの下に。水槽との境界線やカード感をなくす */
+.stats-panel {
+  top: calc(max(8px, env(safe-area-inset-top)) + 151px);
+  width: calc(100% - 24px);
+  padding: 7px 9px;
+  background: linear-gradient(90deg, rgba(8, 31, 57, 0.62), rgba(8, 31, 57, 0.28));
+  border: 0;
+  border-radius: 10px;
+  box-shadow: none;
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 8;
+}
+
+.action-grid {
+  background: linear-gradient(0deg, rgba(5, 20, 40, 0.82), rgba(5, 20, 40, 0.28));
+  padding-top: 7px;
+  padding-bottom: 2px;
+}
+
+.btn-action {
+  border-color: rgba(125, 211, 252, 0.16);
+  background: rgba(19, 42, 72, 0.72);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.16);
+}
+
+@media (max-height: 700px) {
+  .toy-shelf {
+    top: calc(max(6px, env(safe-area-inset-top)) + 88px);
+  }
+  .stats-panel {
+    top: calc(max(6px, env(safe-area-inset-top)) + 140px);
+  }
+}
+
+@media (min-width: 700px) {
+  .toy-shelf {
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(max(8px, env(safe-area-inset-top)) + 96px);
+  }
+}
+
+
+/* ==========================================
+   メイン画面レイアウトの最終調整
+   上：図鑑・世代・所持おもちゃ
+   中：水槽
+   下：ステータス・操作ボタン
+   ========================================== */
+.app-container {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  min-height: 100dvh;
+  margin: 0 auto;
+  padding: 0 10px calc(66px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  gap: 0;
+  pointer-events: none;
+}
+
+.app-container > header {
+  position: fixed;
+  top: max(5px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  max-width: 540px;
+  min-height: 38px;
+  padding: 5px 9px;
+  box-sizing: border-box;
+  z-index: 20;
+  pointer-events: auto;
+  background: linear-gradient(180deg, rgba(8, 31, 57, 0.64), rgba(8, 31, 57, 0.18));
+  border: 0;
+  border-radius: 0 0 12px 12px;
+  box-shadow: none;
+}
+
+/* 図鑑と世代は上部で横並び */
+.dex-panel {
+  position: fixed;
+  top: calc(max(5px, env(safe-area-inset-top)) + 43px);
+  left: 10px;
+  width: max-content;
+  max-width: calc(100vw - 20px);
+  margin: 0;
+  padding: 3px 0;
+  z-index: 19;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  pointer-events: auto;
+}
+
+.dex-panel .evolution-actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.dex-panel .evolution-button,
+.dex-panel .generation-open-button {
+  min-height: 30px;
+  padding: 5px 9px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+/* 所持おもちゃは上部メニューの次の段 */
+.toy-shelf {
+  position: fixed;
+  top: calc(max(5px, env(safe-area-inset-top)) + 79px);
+  bottom: auto;
+  left: 10px;
+  transform: none;
+  width: calc(100% - 20px);
+  max-width: 540px;
+  margin: 0;
+  padding: 4px 7px 5px;
+  box-sizing: border-box;
+  gap: 3px;
+  z-index: 18;
+  background: linear-gradient(90deg, rgba(8, 31, 57, 0.44), rgba(8, 31, 57, 0.12));
+  border: 0;
+  border-radius: 8px;
+  box-shadow: none;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+
+.shelf-title {
+  margin: 0;
+  color: #b7d3e8;
+  font-size: 0.65rem;
+}
+
+.toy-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.toy-buttons::-webkit-scrollbar { display: none; }
+.toy-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 4px 7px;
+  font-size: 0.68rem;
+}
+
+/* ステータスは下メニューバーの上段 */
+.stats-panel {
+  position: fixed;
+  top: auto;
+  bottom: calc(max(8px, env(safe-area-inset-bottom)) + 58px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  max-width: 540px;
+  padding: 5px 8px 4px;
+  box-sizing: border-box;
+  gap: 7px;
+  z-index: 17;
+  background: linear-gradient(0deg, rgba(5, 25, 47, 0.48), rgba(5, 25, 47, 0.16));
+  border: 0;
+  border-radius: 9px;
+  box-shadow: none;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+
+.stat-label { font-size: 0.65rem; }
+.toilet-status { font-size: 0.58rem; }
+
+/* 操作ボタンは画面下端に4つ並べる */
+.action-grid {
+  position: fixed;
+  left: 50%;
+  bottom: max(5px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: calc(100% - 20px);
+  max-width: 540px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px 0 0;
+  z-index: 21;
+  background: linear-gradient(0deg, rgba(5, 20, 40, 0.54), rgba(5, 20, 40, 0));
+  pointer-events: auto;
+}
+
+.btn-action {
+  min-width: 0;
+  min-height: 46px;
+  padding: 4px 2px;
+  font-size: 0.7rem;
+  border-color: rgba(125, 211, 252, 0.16);
+  background: rgba(19, 42, 72, 0.78);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  touch-action: manipulation;
+}
+.btn-action .icon { font-size: 1.05rem; }
+
+/* 水槽は上下のメニューの間に固定し、境界線をなくす */
+.aquarium-card {
+  position: static;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+  pointer-events: none;
+}
+.canvas-wrapper {
+  position: fixed;
+  left: 50%;
+  top: calc(50% + 38px);
+  transform: translate(-50%, -50%);
+  width: min(calc(100vw - 20px), calc(100dvh - 300px), 520px);
+  height: min(calc(100vw - 20px), calc(100dvh - 300px), 520px);
+  min-width: 0;
+  min-height: 0;
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: none;
+  z-index: 1;
+  pointer-events: auto;
+}
+.canvas-wrapper canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.status-overlay { pointer-events: none; }
+
+/* 図鑑などのパネルは通常どおり最前面で操作できる */
+.evolution-panel.dex-panel { pointer-events: auto; }
+.modal, .modal-content, .generation-modal-backdrop { pointer-events: auto; }
+.toast-alert { pointer-events: none; }
+
+@media (max-height: 700px) {
+  .app-container > header { min-height: 34px; padding: 4px 8px; }
+  .dex-panel { top: calc(max(4px, env(safe-area-inset-top)) + 37px); }
+  .toy-shelf { top: calc(max(4px, env(safe-area-inset-top)) + 71px); padding-top: 3px; padding-bottom: 3px; }
+  .shelf-title { font-size: 0.6rem; }
+  .toy-btn { padding: 3px 6px; font-size: 0.63rem; }
+  .stats-panel { bottom: calc(max(5px, env(safe-area-inset-bottom)) + 53px); padding: 4px 7px 3px; }
+  .stat-label { font-size: 0.6rem; }
+  .btn-action { min-height: 42px; }
+  .canvas-wrapper { top: calc(50% + 28px); width: min(calc(100vw - 20px), calc(100dvh - 260px), 520px); height: min(calc(100vw - 20px), calc(100dvh - 260px), 520px); }
+}
+
+@media (min-width: 700px) {
+  .app-container > header { max-width: 540px; }
+  .dex-panel { left: max(10px, calc((100vw - 540px) / 2)); }
+  .toy-shelf { left: 50%; transform: translateX(-50%); }
+  .stats-panel, .action-grid { max-width: 540px; }
+  .canvas-wrapper { width: min(calc(100vw - 40px), calc(100dvh - 300px), 560px); height: min(calc(100vw - 40px), calc(100dvh - 300px), 560px); }
+}
+
+
+/* ==========================================
+   iPhone 14向けの安全な微調整
+   既存レイアウト・操作・ドット絵は変更しない
+   ========================================== */
+@supports (height: 100dvh) {
+  :global(body) {
+    min-height: 100dvh;
+  }
+}
+
+/* iPhoneの縦画面：下の操作ボタンとステータスの重なりを防ぐ */
+@media (max-width: 699px) and (min-height: 701px) {
+  .stats-panel {
+    bottom: calc(max(8px, env(safe-area-inset-bottom)) + 66px);
+  }
+
+  .action-grid {
+    bottom: max(5px, env(safe-area-inset-bottom));
+    padding-bottom: max(3px, env(safe-area-inset-bottom));
+  }
+
+  .btn-action {
+    min-height: 46px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .toy-btn,
+  .icon-btn,
+  .evolution-button,
+  .generation-open-button {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 </style>
